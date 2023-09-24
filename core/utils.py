@@ -1,9 +1,9 @@
-import json
 import firebase_admin
 from core.models.employee import EmployeeDetails
 from firebase_admin import credentials, firestore
 from google.cloud.firestore import Client, CollectionReference, DocumentReference,FieldFilter, DocumentSnapshot
 from typing import Literal, Dict, List, Any
+from google.cloud.exceptions import Conflict
 
 class Manager :
     def __init__(self, credentials_path: str) -> None:
@@ -85,13 +85,16 @@ class Manager :
         Returns:
             None
         """
-        dept = details.deptType
-        doc_ref = self.db.collection(f'maha-emp-01/department/{dept}')
-        details_dict = details.to_dict()
-        # details_dict['id'] = self.get_next_id(dept_type=dept)
-        timestamp, doc = doc_ref.add(details_dict)
-
-        return f'[{timestamp.strftime("%Y-%m-%d %H:%M:%S")}]\nDocument ID: {doc.id}\nCollection: {dept}\nField ID: {details_dict["id"]}'
+        try:
+            dept = details.deptType
+            doc_ref = self.db.collection(f'maha-emp-01/department/{dept}')
+            details_dict = details.to_dict()
+            # details_dict['id'] = self.get_next_id(dept_type=dept)
+            timestamp, doc = doc_ref.add(details_dict)
+            return f'[{timestamp.strftime("%Y-%m-%d %H:%M:%S")}]\nDocument ID: {doc.id}\nCollection: {dept}\nField ID: {details_dict["id"]}'
+        
+        except Conflict:
+            return False
 
     def remove(self, id, dept_type):
         collection_ref: CollectionReference = self.db.collection(self.collection_path.format(dept_type))
