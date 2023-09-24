@@ -7,10 +7,23 @@ from google.cloud.firestore import Client, CollectionReference, FieldFilter, Doc
 
 class Manager :
     def __init__(self, credentials_path: str) -> None:
-        self.cred = credentials.Certificate(credentials_path)
-        self.app = firebase_admin.initialize_app(self.cred)
-        self.db: Client = firestore.client(self.app)
-        self.collection_path = "maha-emp-01/department/{}" 
+        """
+        Constructor for the Manager class.
+    
+        Args:
+            credentials_path (str): The path to the credentials file for accessing the Firestore database.
+        """
+        # Create credentials object
+        self.credentials = credentials.Certificate(credentials_path)
+    
+        # Initialize Firebase app
+        self.app = firebase_admin.initialize_app(self.credentials)
+    
+        # Create database client
+        self.db = firestore.client(self.app)
+    
+        # Set collection path
+        self.collection_path = "maha-emp-01/department/{}"
 
     def add(self, details: EmployeeDetails = None):
         """
