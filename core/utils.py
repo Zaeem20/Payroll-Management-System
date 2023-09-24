@@ -12,55 +12,7 @@ class Manager :
         self.db: Client = firestore.client(self.app)
         self.collection_path = "maha-emp-01/department/{}" 
 
-    def add(self, details: EmployeeDetails = None):
-        """
-        Adds a new employee to the specified department in the Firestore database.
-        Args:
-            details (EmployeeDetails): An instance of the EmployeeDetails class representing the details of the employee to be added.
-        Returns:
-            None
-        """
-        try:
-            dept = details.deptType
-            doc_ref = self.db.collection(f'maha-emp-01/department/{dept}')
-            details_dict = details.to_dict()
-            # details_dict['id'] = self.get_next_id(dept_type=dept)
-            timestamp, doc = doc_ref.add(details_dict)
-            return f'[{timestamp.strftime("%Y-%m-%d %H:%M:%S")}]\nDocument ID: {doc.id}\nCollection: {dept}\nField ID: {details_dict["id"]}'
-        
-        except Conflict:
-            return False
-
-    def remove(self, id: int, dept_type: Literal['teaching', 'non-teaching']) -> bool:
-        """
-        Remove a document from the specified collection in the Firestore database based on the provided ID and department type.
-
-        Args:
-            id (int): The ID of the document to be removed.
-            dept_type (Literal['teaching', 'non-teaching']): The department type of the document.
-
-        Returns:
-            bool: True if the document was successfully deleted, False otherwise.
-        """
-        collection_ref: CollectionReference = self.db.collection(self.collection_path.format(dept_type))
-        document_to_remove: DocumentSnapshot = collection_ref.where(filter=FieldFilter('id', '==', id)).get()
-        if document_to_remove:
-            document_to_remove[0].reference.delete()
-            return True
-        else:
-            return False
-
-    def update(self, id: int, new_values: EmployeeDetails) -> bool:
-        """
-        Updates the details of an employee in the Firestore database based on the provided ID and department type.
-
-        Args:
-            id (int): The ID of the employee to be updated.
-            new_values (EmployeeDetails): An instance of the EmployeeDetails class representing the updated details of the employee.
-
-        Returns:
-            bool: True if the document was successfully updated, False otherwise.
-        """
+    def update(self, id, new_values: EmployeeDetails):
         dept_type = new_values.deptType
         collection_ref = self.db.collection(self.collection_path.format(dept_type))
         doc = collection_ref.where(filter=FieldFilter("id", "==", id)).get()
