@@ -101,23 +101,3 @@ class Manager :
             return True
         else:
             return False
-
-# print(obj.get(10, 'teaching'))
-# print(obj.remove(6, 'teaching'))
-# entries = json.load(open('random_data.json'))
-
-# for entry in entries:
-#     # print(entry)
-#     obj.add(EmployeeDetails.from_dict(entry))
-
-# for i in range(1):
-#     obj.remove(i, 'teaching')
-
-def load_data(dtype):
-    entries = json.load(open('random_data.json'))
-    for data in entries:
-        if dtype == 'both':
-            yield data.values()
-        elif data['type'] == dtype:
-            yield data.values()
-        
