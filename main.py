@@ -584,7 +584,6 @@ class PayrollManager(object):
         self.name_var.set(name)
         self.dept_type.set(type)
         self.sal_var.set(sal)
-        self.salary.config(state=tk.DISABLED)
         self.pf_var.set(pf)
         self.it_var.set(it)
         self.oth_var.set(oth)
