@@ -1,3 +1,4 @@
+import re 
 import tkinter as tk
 from tkinter import ttk, messagebox 
 from core.exporters import to_excel
@@ -513,12 +514,12 @@ class PayrollManager(object):
         messagebox.showinfo('Record Added', 'Record added to report\nkindly navigate to View Report')
 
 
-    def export_report(self, dept_type: Literal['teaching', 'nonteaching']):
+    def export_report(self, dept_type: Literal['teaching', 'non-teaching'], date: str):
         """
         Export a report to an Excel file based on the specified department type.
 
         Args:
-            dept_type (str): The department type. Can be either 'teaching' or 'nonteaching'.
+            dept_type (str): The department type. Can be either 'teaching' or 'non-teaching'.
 
         Returns:
             None
@@ -533,8 +534,9 @@ class PayrollManager(object):
         filtered_rows = [row[1:] for row in rows if row[2].lower().replace('-', '') == dept_type]
 
         # Export the report to an Excel file
-        to_excel(filtered_rows, ('Employee Name', 'Department Type', 'Total Amount', 'Deduction', 'Net Amount', 'Account Number', 'IFSC Code'))
-    
+        filename = to_excel(filtered_rows, ('Employee Name', 'Department Type', 'Total Amount', 'Deduction', 'Net Amount', 'Account Number', 'IFSC Code'), date, dept_type)
+        return filename
+
     def update_to_db(self):
         """
         Update the details of an employee in the database.
@@ -635,12 +637,30 @@ class PayrollManager(object):
         exportMenu = ttk.LabelFrame(self.generate_tab, text='Export Menu')
 
         # Create buttons for exporting the report for teaching and non-teaching employees
-        export_teaching = ttk.Button(exportMenu, text='Export Teaching', command=lambda: self.export_report(dept_type='teaching'))
-        export_nonteaching = ttk.Button(exportMenu, text='Export Non-Teaching', command=lambda: self.export_report(dept_type='nonteaching'))
+        date_entry = ttk.Entry(exportMenu)
+        date_placeholder = "Date: DD-MM-YYYY"
+        date_entry.insert(0, date_placeholder)
+        date_entry.bind('<FocusIn>', lambda e: self._on_entry_focus_in(date_entry, date_placeholder))
+        date_entry.bind('<FocusOut>', lambda e: self._on_entry_focus_out(date_entry, date_placeholder))
+        export_teaching = ttk.Button(exportMenu, text='Export Teaching', command=lambda: validate_then_export(dept_type='teaching', placeholder=date_placeholder))
+        export_nonteaching = ttk.Button(exportMenu, text='Export Non-Teaching', command=lambda: validate_then_export(dept_type='non-teaching', placeholder=date_placeholder))
 
+        def validate_then_export(dept_type, placeholder):
+            if date_entry.get() == placeholder:
+                messagebox.showerror('Date Required', 'please enter date of report before exporting')
+            else:
+                date = date_entry.get()
+                match = re.match(r'(\d{1,2}\-\d{1,2}\-\d{4})', date)
+                if match:
+                    filename = self.export_report(dept_type, date)
+                    messagebox.showinfo('Report Generated', f"All records is succesfully exported in\nFilename: {filename}")
+                else:
+                    messagebox.showerror('Improper Date Format', 'please enter date in the correct format as mentioned')
+    
         # Grid the buttons in the export menu
-        export_teaching.grid(row=0, padx=(5, 5), pady=(5, 5))
-        export_nonteaching.grid(row=0, column=1, padx=(5, 5), pady=(5, 5))
+        date_entry.grid(row=0, padx=(5, 5), pady=(5, 5))
+        export_teaching.grid(row=0, column=1, padx=(5, 5), pady=(5, 5))
+        export_nonteaching.grid(row=0, column=2, padx=(5, 5), pady=(5, 5))
 
         # Pack the export menu in the GUI
         exportMenu.pack(pady=(10, 10))
