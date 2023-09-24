@@ -1,14 +1,10 @@
 import tkinter as tk
-from tkinter import ttk, messagebox
-from core.utils import load_data
-import numpy as np 
+from tkinter import ttk, messagebox 
 from core.exporters import to_excel
 from core.logic import calculateSalary
 from core.utils import Manager
 from core.models.employee import EmployeeDetails
-from typing import Literal, List, Generator, Union, Any
-
-
+from typing import Literal, List, Union
 
 class PayrollManager(object):
     def __init__(self, root: tk.Tk):
