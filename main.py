@@ -127,22 +127,51 @@ class PayrollManager(object):
         self.generate_report()
 
     def add_employee(self):
+        """
+        Add a new employee to the payroll system.
+
+        Retrieves the employee details from the input fields in the GUI,
+        creates an `EmployeeDetails` object with the provided information,
+        and adds it to the database using the `database_manager` object.
+        Displays a success or error message based on the result of the database operation.
+        """
+
+        # Retrieve employee details from GUI input fields
         name = self.name_entry.get()
         fixed = int(self.fixed_entry.get())
         it = int(self.it_entry.get())
         pf = int(self.pf_entry.get())
         other = int(self.other_tax_entry.get())
         department_type = 'teaching' if self.emp_status.get() == 1 else 'non-teaching'
-        id = self.database_manager.get_next_id(department_type)
         bankacc = self.employee_account.get()
         ifsc = self.ifsc_code.get()
 
-        details = EmployeeDetails(id=id, name=name, dept_type=department_type, salary=fixed,
-                                    income_tax=it, prominent_fund=pf, other_tax=other,
-                                    account_number=bankacc, ifsc_code=ifsc)
-        
+        # Generate unique ID for the employee
+        id = self.database_manager.get_next_id(department_type)
+
+        # Create EmployeeDetails object
+        details = EmployeeDetails(
+            id=id,
+            name=name,
+            dept_type=department_type,
+            salary=fixed,
+            income_tax=it,
+            prominent_fund=pf,
+            other_tax=other,
+            account_number=bankacc,
+            ifsc_code=ifsc
+        )
+
+        # Add employee details to the database
         msg = self.database_manager.add(details)
-        messagebox.showinfo('Employee Added', msg)
+
+        # Display success or error message
+        if msg:
+            messagebox.showinfo('Employee Added', msg)
+        else:
+            messagebox.showerror('Employee Not Added', 'It seems that an employee with the same details exists. '
+                                                        'Try to remove the old entry. If the issue still persists, '
+                                                        'please connect with the Development Team.')
 
     def view_employee(self):
         """
@@ -333,6 +362,15 @@ class PayrollManager(object):
         bottomFrame.pack()
 
     def check_class(self, class_):
+        """
+        Update the values of the year and course dropdown menus based on the selected value of the class dropdown menu.
+
+        Args:
+            class_: A dropdown menu object representing the class selection.
+
+        Returns:
+            None
+        """
         value = class_.get().lower().replace(' ', '')
 
         if value == 'postgraduate':
@@ -368,7 +406,34 @@ class PayrollManager(object):
                 self.sideFrame.grid(row=1, column=1, padx=(8,8), pady=(20,20))
             return True
 
-    def add_class_record(self, tree: ttk.Treeview):
+    def add_class_record(self, tree: ttk.Treeview) -> None:
+        """
+        Add a new record to the Treeview widget.
+
+        Args:
+            tree (ttk.Treeview): The Treeview widget representing the table where the record will be added.
+
+        Returns:
+            None
+
+        Summary:
+        The `add_class_record` method is used to add a new record to a Treeview widget in the GUI. It checks if the record already exists and prompts the user to update it if necessary.
+
+        Example Usage:
+        ```python
+        manager = PayrollManager(root)
+        manager.add_class_record(tree)
+        ```
+
+        Code Analysis:
+        - Get the values of the year, course, and number of lectures from the GUI.
+        - Get the existing records from the Treeview widget.
+        - Convert the number of lectures to an integer.
+        - Check if a record with the same year and course already exists.
+        - If the record exists, prompt the user to update it.
+        - If the user chooses to update, find the location of the existing record and update its values.
+        - If the record does not exist, insert a new row with the values into the Treeview widget.
+        """
         values = (self.year.get(), self.course.get(), self.no_of_lectures.get())
         raw_row =  [(child, tree.item(child, 'values')) for child in tree.get_children()]
 
@@ -378,7 +443,7 @@ class PayrollManager(object):
         exists = any(x[1][:-1] == values[:-1] for x in records)
 
         if exists:
-            
+        
             result = messagebox.askyesno('Duplicate Found', 'it seems table already contains this record\nWould you like to update that.')
             if result:
                 # if yes the where it is located
@@ -471,6 +536,12 @@ class PayrollManager(object):
         to_excel(filtered_rows, ('Employee Name', 'Department Type', 'Total Amount', 'Deduction', 'Net Amount', 'Account Number', 'IFSC Code'))
     
     def update_to_db(self):
+        """
+        Update the details of an employee in the database.
+
+        Returns:
+            None
+        """
         id = self.id_var.get()
         name = self.name_var.get()
         dept = self.dept_type.get()
@@ -491,69 +562,114 @@ class PayrollManager(object):
             messagebox.showerror('Update Failure', 'something went wrong\ncontact development team.')
 
     def delete_from_db(self):
-        id = self.id_var.get()
-        dept_type = self.dept_type.get()
-        removed = self.database_manager.remove(id, dept_type)
+        """
+        Deletes an employee from the database.
+
+        :return: None
+        """
+        employee_id = self.id_var.get()
+        department_type = self.dept_type.get()
+
+        removed = self.database_manager.remove(employee_id, department_type)
+
         if removed:
             messagebox.showinfo('Employee Deleted', 'Employee successfully removed from database\nKindly Refresh Tree.')
         else:
-            messagebox.showerror('Deletion Failure', 'something went wrong\ncontact development team.')
+            messagebox.showerror('Deletion Failure', 'Something went wrong\nContact development team.')
 
 
     def show_employees(self, tree: ttk.Treeview, dept_type: Literal['teaching', 'non-teaching']):
+        """
+        Updates the tree widget with employee details based on their department type.
+
+        Args:
+            tree (ttk.Treeview): The tree widget where the employee details will be displayed.
+            dept_type (Literal['teaching', 'non-teaching']): The department type of the employees to be displayed.
+
+        Returns:
+            None
+        """
+        # Clear the existing entries in the tree widget
         tree.delete(*tree.get_children())
-        for entires in self.database_manager.getAll(dept_type):
-            tree.insert('', tk.END, values=tuple(entires.values()))
+
+        # Retrieve the employee details from the database for the specified dept_type
+        employees = self.database_manager.getAll(dept_type)
+
+        # Insert the employee details as rows in the tree widget
+        for entry in employees:
+            tree.insert('', tk.END, values=tuple(entry.values()))
 
     def generate_report(self):
+        """
+        Creates a report table in the GUI and allows the user to export the report for teaching and non-teaching employees.
+        """
+        # Create a frame for the report table in the GUI
         treeFrame = ttk.Frame(self.generate_tab)
         treeFrame.pack()
+
+        # Create a scrollbar for the report table
         scroll = ttk.Scrollbar(treeFrame)
         scroll.pack(side='right', fill='y')
+
+        # Define the columns for the report table
         columns = ['sr', 'name', 'type', 'amount', 'deduction', 'netamount', 'bankaccount', 'bankifsc']
+
+        # Create a Treeview widget for the report table with the specified columns
         self.report_table = ttk.Treeview(treeFrame, yscrollcommand=scroll.set, show='headings', column=columns, height=10)
 
-        # table.column("#0", width=0, stretch=tk.NO)  # Hide the first column
-        self.report_table.column('sr', width=40, minwidth=40, anchor='w')
-        self.report_table.column("name", width=125, minwidth=125, anchor='w')
-        self.report_table.column("type", width=120, minwidth=120, anchor='w')
-        self.report_table.column("amount", width=90, minwidth=90, anchor='w')
-        self.report_table.column('deduction', width=80, minwidth=80, anchor='w')
-        self.report_table.column("netamount", width=80, minwidth=80, anchor='w')
-        self.report_table.column("bankaccount", width=120, minwidth=120, anchor='w')
-        self.report_table.column('bankifsc', width=100, minwidth=100, anchor='w')
+        # Set the column widths and headings for the report table
+        column_widths = [40, 125, 120, 90, 80, 80, 120, 100]
+        column_headings = ['Sr No.', 'Employee Name', 'Department Type', 'Total Amount', 'Deduction', 'Net Amount', 'Account Number', 'IFSC Code']
 
-        self.report_table.heading('sr', text='Sr No.', anchor='w')
-        self.report_table.heading('name', text='Employee Name', anchor='w')
-        self.report_table.heading('type', text='Department Type', anchor='w')
-        self.report_table.heading('amount', text='Total Amount', anchor='w')
-        self.report_table.heading('deduction', text='Deduction', anchor='w')
-        self.report_table.heading('netamount', text='Net Amount', anchor='w')
-        self.report_table.heading('bankaccount', text='Account Number', anchor='w')
-        self.report_table.heading('bankifsc', text='IFSC Code', anchor='w')
+        for i, column in enumerate(columns):
+            self.report_table.column(column, width=column_widths[i], minwidth=column_widths[i], anchor='w')
+            self.report_table.heading(column, text=column_headings[i], anchor='w')
 
+        # Configure the scrollbar to scroll the report table
         scroll.config(command=self.report_table.yview)
-        self.report_table.pack(padx=(3,3))
 
+        # Pack the report table in the frame
+        self.report_table.pack(padx=(3, 3))
+
+        # Create a label frame for the export menu
         exportMenu = ttk.LabelFrame(self.generate_tab, text='Export Menu')
-        
-        export_teaching = ttk.Button(exportMenu, text='Export Teaching', command=lambda : self.export_report(dept_type='teaching'))
-        export_nonteaching = ttk.Button(exportMenu, text='Export Non-Teaching', command=lambda : self.export_report(dept_type='nonteaching'))
-        export_teaching.grid(row=0, padx=(5,5), pady=(5,5))
-        export_nonteaching.grid(row=0, column=1, padx=(5,5), pady=(5,5))
-        
-        exportMenu.pack(pady=(10,10))
+
+        # Create buttons for exporting the report for teaching and non-teaching employees
+        export_teaching = ttk.Button(exportMenu, text='Export Teaching', command=lambda: self.export_report(dept_type='teaching'))
+        export_nonteaching = ttk.Button(exportMenu, text='Export Non-Teaching', command=lambda: self.export_report(dept_type='nonteaching'))
+
+        # Grid the buttons in the export menu
+        export_teaching.grid(row=0, padx=(5, 5), pady=(5, 5))
+        export_nonteaching.grid(row=0, column=1, padx=(5, 5), pady=(5, 5))
+
+        # Pack the export menu in the GUI
+        exportMenu.pack(pady=(10, 10))
 
     def theme_callback(self):
+        """
+        Callback function triggered when the user clicks on the "Dark Theme" checkbutton.
+        Changes the theme of the GUI based on the state of the checkbutton.
+        """
         if self.theme_mode.instate(['selected']):
             self.style.theme_use('forest-dark')
         else:
             self.style.theme_use('forest-light')
 
     def _refresh_tree(self, tree: ttk.Treeview, values: Union[List[tuple], List[dict]]):
-        for i in tree.get_children():
-            tree.delete(i)
-    
+        """
+        Update the data displayed in a ttk.Treeview widget by deleting all existing rows and inserting new rows based on the provided values.
+
+        Args:
+            tree (ttk.Treeview): The ttk.Treeview widget to be updated.
+            values (Union[List[tuple], List[dict]]): A list of tuples or dictionaries that contain the data to be displayed in the treeview.
+
+        Returns:
+            None
+        """
+        # Delete all existing rows in the treeview widget
+        tree.delete(*tree.get_children())
+
+        # Insert new rows based on the provided values
         for val in values:
             if isinstance(val, dict):
                 tree.insert('', tk.END, values=tuple(val.values()))
@@ -561,17 +677,36 @@ class PayrollManager(object):
                 tree.insert('', tk.END, values=val)
 
     def _check_is_ug(self, row: tuple):
+        """ Helper function to check whether class is Under Graduate or Post Graduate """
         if row[1].startswith('M'):
             return False
         return True
 
     def _on_entry_focus_in(self, widget, placeholder_text):
+        """
+        Handles the focus in event of an entry widget.
+
+        Args:
+            widget (tk.Entry): The entry widget that triggered the focus event.
+            placeholder_text (str): The placeholder text that is displayed in the entry widget.
+
+        Returns:
+            None
+        """
         if widget.get() == placeholder_text:
             widget.delete(0, tk.END)
-            # if self.style.get_
-            # widget.config(foreground="black")
             
     def _on_entry_focus_out(self, widget: ttk.Widget.bbox, placeholder_text):
+        """
+        Handles the focus out event of an entry widget.
+
+        Args:
+            widget (ttk.Widget.bbox): The entry widget that triggered the focus event.
+            placeholder_text (str): The placeholder text that is displayed in the entry widget.
+
+        Returns:
+            None
+        """
         if not widget.get():
             widget.insert(0, placeholder_text)
     
@@ -597,4 +732,3 @@ if __name__ == '__main__':
     root = tk.Tk()
     app = PayrollManager(root)
     root.mainloop()
-    
