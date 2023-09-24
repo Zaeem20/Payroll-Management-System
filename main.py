@@ -653,7 +653,7 @@ class PayrollManager(object):
                 match = re.match(r'(\d{1,2}\-\d{1,2}\-\d{4})', date)
                 if match:
                     filename = self.export_report(dept_type, date)
-                    messagebox.showinfo('Report Generated', f"All records is succesfully exported in\nFilename: {filename}")
+                    messagebox.showinfo('Report Generated', f"All records are succesfully exported in\nFilename: {filename}")
                 else:
                     messagebox.showerror('Improper Date Format', 'please enter date in the correct format as mentioned')
     
