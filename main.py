@@ -126,6 +126,7 @@ class PayrollManager(object):
         self.view_employee()
         self.manage_employee()
         self.generate_report()
+        self.add_credits()
 
     def add_employee(self):
         """
@@ -701,6 +702,12 @@ class PayrollManager(object):
         if row[1].startswith('M'):
             return False
         return True
+
+    def add_credits(self):
+        self.credits_frame = ttk.Frame(self.root)
+        credits = ttk.Label(self.credits_frame, text='Developed by Students of Department CS & IT')
+        credits.pack()
+        self.credits_frame.pack(side='bottom', fill='x', pady=(3,22))
 
     def _on_entry_focus_in(self, widget, placeholder_text):
         """
