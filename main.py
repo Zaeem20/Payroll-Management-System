@@ -13,9 +13,9 @@ class PayrollManager(object):
         self.database_manager = Manager('credentials/firestore_keys.json')
         # windows config
         self.root = root
-        self.root.geometry('850x720')  # W x H
-        self.root.minsize(850, 720)
-        self.root.maxsize(850, 720)
+        self.root.geometry('850x703')  # W x H
+        self.root.minsize(850, 703)
+        self.root.maxsize(850, 703)
         self.root.call('source', 'theme/forest-dark.tcl')
         self.root.call('source', 'theme/forest-light.tcl')
         self.style = ttk.Style(root)
@@ -708,8 +708,8 @@ class PayrollManager(object):
     def add_credits(self):
         self.credits_frame = ttk.Frame(self.root)
         credits = ttk.Label(self.credits_frame, text='Developed by Students of Department CS & IT')
-        credits.pack()
-        self.credits_frame.pack(side='bottom', fill='x', pady=(3,22))
+        credits.pack(pady=(2.5,2.5))
+        self.credits_frame.pack(side='bottom', fill='x')
 
     def _on_entry_focus_in(self, widget, placeholder_text):
         """
