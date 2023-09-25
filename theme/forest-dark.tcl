@@ -231,7 +231,7 @@ namespace eval ttk::theme::forest-dark {
                 {selected disabled} $I(rect-basic) \
                 disabled $I(rect-basic) \
                 selected $I(rect-basic) \
-                pressed $I(rect-basic) \
+                pressed $I(rect-accent) \
                 active $I(rect-hover) \
             ] -border 4 -sticky nsew
 
