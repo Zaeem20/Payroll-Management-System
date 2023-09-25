@@ -37,7 +37,7 @@ class PayrollManager(object):
 
         # Banner
         self.banner_image = tk.PhotoImage(file='assets/banner/main-banner.png')
-        self.banner = tk.Label(self.add_tab, image=self.banner_image, relief=tk.RIDGE, bd=8)
+        self.banner = tk.Label(self.add_tab, image=self.banner_image, relief=tk.GROOVE, bd=8)
         self.banner.grid(row=1, column=0, padx=(100,100), pady=20, columnspan=2)
 
         # Setting Up Frame 
@@ -651,7 +651,9 @@ class PayrollManager(object):
                 messagebox.showerror('Date Required', 'please enter date of report before exporting')
             else:
                 date = date_entry.get()
-                match = re.match(r'(\d{1,2}\-\d{1,2}\-\d{4})', date)
+                # date regex for validating dates whether day <= 31, month <= 12, year between (19..,20..)
+                date_pattern = r'^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[012])-(19|20)\d\d$'
+                match = re.match(date_pattern, date)
                 if match:
                     filename = self.export_report(dept_type, date)
                     messagebox.showinfo('Report Generated', f"All records are succesfully exported in\nFilename: {filename}")
