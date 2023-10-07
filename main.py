@@ -119,7 +119,8 @@ class PayrollManager(object):
         self.theme_mode.grid(row=4, column=0, padx=(4,4))
 
         # Atlast our Submit button
-        self.submit_btn = ttk.Button(self.add_tab, text='Add Employee', command=self.add_employee)
+        self.submit_btn = ttk.Button(self.add_tab, text='Add Employee',
+                                    command=self.add_employee)
         self.submit_btn.grid(row=4, column=0, pady=10, padx=(80,165), sticky='e')
         
         # Calling other functions
@@ -139,14 +140,19 @@ class PayrollManager(object):
         """
 
         # Retrieve employee details from GUI input fields
-        name = self.name_entry.get()
-        fixed = int(self.fixed_entry.get())
-        it = int(self.it_entry.get())
-        pf = int(self.pf_entry.get())
-        other = int(self.other_tax_entry.get())
+        name = self._get_entry_value(self.name_entry, 'Name')
+        fixed = self._get_entry_value(self.fixed_entry, 'Fixed Pay')
+        it = self._get_entry_value(self.it_entry, 'Income Tax')
+        pf = self._get_entry_value(self.pf_entry, 'Prominent Fund')
+        other = self._get_entry_value(self.other_tax_entry, 'Othar taxes')
         department_type = 'teaching' if self.emp_status.get() == 1 else 'non-teaching'
-        bankacc = self.employee_account.get()
-        ifsc = self.ifsc_code.get()
+        bankacc = self._get_entry_value(self.employee_account, 'Account Number')
+        ifsc = self._get_entry_value(self.ifsc_code, 'Bank\'s IFSC Code')
+
+        if not all((name, fixed, it, pf, other, department_type, bankacc, ifsc)):
+            messagebox.showerror('', 'Cannot Add employee, lack of information')
+            return 
+
 
         # Generate unique ID for the employee
         id = self.database_manager.get_next_id(department_type)
@@ -668,6 +674,12 @@ class PayrollManager(object):
         # Pack the export menu in the GUI
         exportMenu.pack(pady=(10, 10))
 
+    def add_credits(self):
+        self.credits_frame = ttk.Frame(self.root)
+        credits = ttk.Label(self.credits_frame, text='Developed by Students of Department CS & IT')
+        credits.pack(pady=(2.5,2.5))
+        self.credits_frame.pack(side='bottom', fill='x')
+
     def theme_callback(self):
         """
         Callback function triggered when the user clicks on the "Dark Theme" checkbutton.
@@ -705,11 +717,6 @@ class PayrollManager(object):
             return False
         return True
 
-    def add_credits(self):
-        self.credits_frame = ttk.Frame(self.root)
-        credits = ttk.Label(self.credits_frame, text='Developed by Students of Department CS & IT')
-        credits.pack(pady=(2.5,2.5))
-        self.credits_frame.pack(side='bottom', fill='x')
 
     def _on_entry_focus_in(self, widget, placeholder_text):
         """
@@ -725,6 +732,12 @@ class PayrollManager(object):
         if widget.get() == placeholder_text:
             widget.delete(0, tk.END)
             
+    def _get_entry_value(self, widget, placeholder):
+        value = widget.get()
+        if value == placeholder:
+            return False
+        return value
+
     def _on_entry_focus_out(self, widget: ttk.Widget.bbox, placeholder_text):
         """
         Handles the focus out event of an entry widget.
