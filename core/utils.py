@@ -1,3 +1,4 @@
+import sys, os
 import firebase_admin
 from typing import Literal, Dict, Any
 from core.models.employee import EmployeeDetails
@@ -157,3 +158,12 @@ class Manager :
         ordered_dict = {key: data[key] for key in order if key in data}
         return ordered_dict
 
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS2
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
