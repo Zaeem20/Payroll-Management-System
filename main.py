@@ -1,27 +1,33 @@
-import re 
+import re, os
 import tkinter as tk
 from tkinter import ttk, messagebox 
 from core.exporters import to_excel
 from core.logic import calculateSalary
-from core.utils import Manager
+from core.utils import Manager, resource_path
 from core.models.employee import EmployeeDetails
 from typing import Literal, List, Union
+from dotenv import load_dotenv
+
+# Loading Environment Variables
+load_dotenv()
 
 class PayrollManager(object):
     def __init__(self, root: tk.Tk):
         # Setting up Database Manager
-        self.database_manager = Manager('credentials/firestore_keys.json')
+        self.certificate_path = os.getenv('CREDENTIALS_CERTIFICATE_PATH')
+        self.database_manager = Manager(resource_path(self.certificate_path))
         # windows config
         self.root = root
         self.root.geometry('850x703')  # W x H
         self.root.minsize(850, 703)
         self.root.maxsize(850, 703)
-        self.root.call('source', 'theme/forest-dark.tcl')
-        self.root.call('source', 'theme/forest-light.tcl')
+        self.root.call('source', resource_path('theme\\forest-dark.tcl'))
+        self.root.call('source', resource_path('theme\\forest-light.tcl'))
         self.style = ttk.Style(root)
         self.style.theme_use('forest-light')
-        self.root.title("Maharashtra College Payroll Software")
-        self.root.iconphoto(True, tk.PhotoImage(file='assets/icons/icon.png'))
+        self.app_title = os.getenv('APP_TITLE')
+        self.root.title(self.app_title)
+        self.root.iconphoto(True, tk.PhotoImage(file=resource_path('assets\\icons\\icon.png')))
         self.emp_status = tk.IntVar()
         self.no_of_lectures = tk.IntVar()
 
@@ -36,7 +42,7 @@ class PayrollManager(object):
         self.notebook.pack(expand=True, fill='both')
 
         # Banner
-        self.banner_image = tk.PhotoImage(file='assets/banner/main-banner.png')
+        self.banner_image = tk.PhotoImage(file=resource_path('assets\\banner\\main-banner.png'))
         self.banner = tk.Label(self.add_tab, image=self.banner_image, relief=tk.GROOVE, bd=8)
         self.banner.grid(row=1, column=0, padx=(100,100), pady=20, columnspan=2)
 
@@ -541,8 +547,8 @@ class PayrollManager(object):
         filtered_rows = [row[1:] for row in rows if row[2].lower().replace('-', '') == dept_type]
 
         # Export the report to an Excel file
-        filename = to_excel(filtered_rows, ('Employee Name', 'Department Type', 'Total Amount', 'Deduction', 'Net Amount', 'Account Number', 'IFSC Code'), date, dept_type)
-        return filename
+        ret, filename = to_excel(filtered_rows, ('Employee Name', 'Department Type', 'Total Amount', 'Deduction', 'Net Amount', 'Account Number', 'IFSC Code'), date, dept_type)
+        return ret, filename
 
     def update_to_db(self):
         """
@@ -661,8 +667,9 @@ class PayrollManager(object):
                 date_pattern = r'^(0[1-9]|[12][0-9]|3[01])-(0[1-9]|1[012])-(19|20)\d\d$'
                 match = re.match(date_pattern, date)
                 if match:
-                    filename = self.export_report(dept_type, date)
-                    messagebox.showinfo('Report Generated', f"All records are succesfully exported in\nFilename: {filename}")
+                    ret, filename = self.export_report(dept_type, date)
+                    if not ret: return messagebox.showerror('Error Occurred', filename)
+                    messagebox.showinfo('Report Generated', f"All records are succesfully exported in\n\nFilename: {filename.rsplit('/')[-1]}\nLocation: {filename.rsplit('/', maxsplit=1)[0]}")
                 else:
                     messagebox.showerror('Improper Date Format', 'please enter date in the correct format as mentioned')
     
