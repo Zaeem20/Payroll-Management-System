@@ -1,2 +1,5 @@
 ignore/
 __pycache__/
+output/
+certi/
+.env
